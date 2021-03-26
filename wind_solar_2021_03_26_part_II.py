@@ -6,9 +6,9 @@ import argparse
 
 
 class projected_wind_solar_requests:
-    base_projected_url='https://api.pjm.com/api/v1/'
+    BASE_PROJECTED_URL='https://api.pjm.com/api/v1/'
 
-    headers_projected_dict ={'Host': 'api.pjm.com',
+    HEADERS_PROJECTED_DICT ={'Host': 'api.pjm.com',
     'Connection': 'keep-alive',
     'Pragma': 'no-cache',
     'Cache-Control': 'no-cache',
@@ -32,50 +32,57 @@ class projected_wind_solar_requests:
   
 
     def projected_solar_wind_requests(self):
+        
         projected_options=['projected_solar','projected_wind']
 
         for option in projected_options:
+
             if option=='projected_solar':
                 
-                params_dict={"rowCount": "25",
+                params_dict={"rowCount": "1000",
                 "sort":"evaluated_at_utc",
                 "order": "Desc",
                 "startRow": "1",
                 "isActiveMetadata": "true",
                 "fields": "datetime_beginning_ept,datetime_beginning_utc,datetime_ending_ept,datetime_ending_utc,evaluated_at_ept,evaluated_at_utc,solar_forecast_mwh",
                 "evaluated_at_ept": "2/23/2021 09:00to3/24/2021 09:00"}
-                url=f"{self.base_projected_url}hourly_{self.SOLAR_MWH_REQUESTS}_power_forecast"
+                url=f"{self.BASE_PROJECTED_URL}hourly_{self.SOLAR_MWH_REQUESTS}_power_forecast"
                 
-                self.projected_solar_data=requests.get(url,headers=self.headers_projected_dict,params=params_dict).json()['items']
-             
+                self.projected_solar_data=requests.get(url,headers=self.HEADERS_PROJECTED_DICT,params=params_dict).json()['items']
+                self.daily_projected_solar_data=[]
+
+                for row in self.projected_solar_data:
+                    if row['evaluated_at_utc'].split("T")[1]=='13:00:00':
+                        self.daily_projected_solar_data.append(row)
+           
             if option=="projected_wind":
 
-                params_dict={"rowCount": "25",
+                params_dict={"rowCount": "1000",
                 "sort":"evaluated_at_utc",
                 "order": "Desc",
                 "startRow": "1",
                 "isActiveMetadata": "true",
                 "fields": "datetime_beginning_ept,datetime_beginning_utc,datetime_ending_ept,datetime_ending_utc,evaluated_at_ept,evaluated_at_utc,wind_forecast_mwh",
                 "evaluated_at_ept": "2/23/2021 09:00to3/24/2021 09:00"}
-                url=f"{self.base_projected_url}hourly_{self.WIND_MWH_REQUESTS}_power_forecast"
+                url=f"{self.BASE_PROJECTED_URL}hourly_{self.WIND_MWH_REQUESTS}_power_forecast"
 
-                self.projected_wind_data=requests.get(url,headers=self.headers_projected_dict,params=params_dict).json()['items']
+                self.projected_wind_data=requests.get(url,headers=self.HEADERS_PROJECTED_DICT,params=params_dict).json()['items']
+                self.daily_projected_wind_data=[]
 
-        self.process_projected_wind_solar_data(self.projected_solar_data,self.projected_wind_data)
+                for row in self.projected_wind_data:
+                    if row['evaluated_at_utc'].split("T")[1]=='13:00:00':
+                        self.daily_projected_wind_data.append(row)
+        self.process_projected_wind_solar_data(self.daily_projected_solar_data,self.daily_projected_wind_data)
 
 
-    def process_projected_wind_solar_data(self,projected_solar_data,projected_wind_data):
+    def process_projected_wind_solar_data(self,daily_projected_solar_data,daily_projected_wind_data):
+
          self.projected_dict={}
 
- 
-         for solar_dict,wind_dict in zip(projected_solar_data,self.projected_wind_data):
-             print(zip(self.projected_solar_data,self.projected_wind_data))
-
+         for solar_dict,wind_dict in zip(daily_projected_solar_data,self.daily_projected_wind_data):
              if solar_dict['evaluated_at_utc'] not in self.projected_dict:
                     self.projected_dict.update({solar_dict['evaluated_at_utc']:{'projected':{'solar':int(solar_dict['solar_forecast_mwh']),'wind':int(wind_dict['wind_forecast_mwh'])}}})
-                 
              else:
-                print(self.projected_dict[solar_dict['evaluated_at_utc']]['projected']['wind'])
                 self.projected_dict[solar_dict['evaluated_at_utc']]['projected']['solar']= self.projected_dict[solar_dict['evaluated_at_utc']]['projected']['solar'] + int(solar_dict['solar_forecast_mwh'])
                 self.projected_dict[wind_dict['evaluated_at_utc']]['projected']['wind']= self.projected_dict[wind_dict['evaluated_at_utc']]['projected']['wind'] + int(wind_dict['wind_forecast_mwh'])
          print(self.projected_dict)
@@ -87,6 +94,10 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+
+
+
 
 
 
