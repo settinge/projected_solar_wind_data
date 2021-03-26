@@ -1,14 +1,10 @@
 # projected_solar_wind_data
 Write a script that extracts the data on these webpages (ideally not the CSV) to aggregate projected and actual solar and wind generation (MWh) by day for the last 30 days within PJM. Forecasts should be collected from a consistent evaluation time each day for the following day.
 
-PJM Solar Generation Hourly Forecast
-PJM Wind Generation Hourly Forecast
-PJM Historical Generation by Fuel Type
-PJM Solar Generation Hourly Forecast
-PJM Wind Generation Hourly Forecast
-PJM Historical Generation by Fuel Type
 
 
+https://dataminer2.pjm.com/feed/hourly_solar_power_forecast
+https://dataminer2.pjm.com/feed/hourly_wind_power_forecast
 
 The script should output a dictionary structured as follows:
 
